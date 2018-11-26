@@ -91,6 +91,7 @@ for i in range(0, count_files()):
   keypoints, output_image = openpose.forward(img, True)
 
   cv2.imshow("output", output_image)
+  print("Frame" + str(i))
 
   # does find new person?
   current_num = keypoints.shape[0]
@@ -100,20 +101,20 @@ for i in range(0, count_files()):
   print("detect " + str(keypoints.shape[0]) + " persons.")
 
   # calculate mean coordinate
-  if keypoints.shape[0] != 0:
-    for i in range(0, keypoints.shape[0]):
+  if keypoints.shape[0] != 0: # if no person then donot calculate
+    for j in range(0, keypoints.shape[0]):
       #print("x: " + str(np.average(keypoints[i, :, 0])))
       #print("y; " + str(np.average(keypoints[i, :, 1])))
-      x = keypoints[i, :, 0]
-      y = keypoints[i, :, 1]
+      x = keypoints[j, :, 0]
+      y = keypoints[j, :, 1]
       size = 0
-      for j in range(0, keypoints.shape[1]):
-        if not (keypoints[0, :, 0][j]==0 and keypoints[0, :, 1][j]==0):
+      for k in range(0, keypoints.shape[1]):
+        if not (keypoints[0, :, 0][k]==0 and keypoints[0, :, 1][k]==0):
           size = size + 1
       x_mean = np.sum(x) / size
       y_mean = np.sum(y) / size
       print("x: " + str(x_mean))
-      print("y; " + str(y_mean))
+      print("y: " + str(y_mean))
 
   print("--------------------")
   #print("shape: " + str(keypoints.shape))
