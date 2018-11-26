@@ -3,10 +3,23 @@
 import sys
 import cv2
 import os
+import re
 import matplotlib.pyplot as plt
 from sys import platform
 import numpy as np
 
+# ----------count the number of files----------
+def count_files():
+  directory = os.path.expanduser('~') + "/opencv_test/images"
+  files = os.listdir(directory)
+  count = 0
+  for file in files:
+    index = re.search('.png', file)
+    if index:
+      count = count + 1
+  return count
+
+# ----------set paramaters----------
 # Remember to add your installation path here
 # Option a
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -71,7 +84,7 @@ openpose = OpenPose(params)
 # ----------print keypoints in for loop----------
 current_num = 0
 last_num=0
-for i in range(0, 30):
+for i in range(0, count_files()):
   img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
   keypoints, output_image = openpose.forward(img, True)
 
@@ -97,3 +110,4 @@ for i in range(0, 30):
   print("--------------------")
   #print("shape: " + str(keypoints.shape))
   cv2.waitKey(15)
+
