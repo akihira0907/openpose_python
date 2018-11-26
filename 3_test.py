@@ -82,30 +82,38 @@ openpose = OpenPose(params)
 #cv2.waitKey(0)
 
 # ----------print keypoints in for loop----------
-current_num = 0
-last_num=0
+current_num = 0 # num of persons
+last_num=0 # num of last persons
+
+# loop for all images
 for i in range(0, count_files()):
   img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
   keypoints, output_image = openpose.forward(img, True)
 
-  #plt.imshow(img)
-  #plt.scatter(keypoints[0, :, 0], keypoints[0, :, 1])
-  #plt.show()
-  #cv2.waitKey(0)
-
   cv2.imshow("output", output_image)
 
+  # does find new person?
   current_num = keypoints.shape[0]
   if current_num > last_num:
     print("find a new person!")
   last_num = current_num
-
   print("detect " + str(keypoints.shape[0]) + " persons.")
 
+  # calculate mean coordinate
   if keypoints.shape[0] != 0:
     for i in range(0, keypoints.shape[0]):
-      print("x: " + str(np.average(keypoints[i, :, 0])))
-      print("y; " + str(np.average(keypoints[i, :, 1])))
+      #print("x: " + str(np.average(keypoints[i, :, 0])))
+      #print("y; " + str(np.average(keypoints[i, :, 1])))
+      x = keypoints[i, :, 0]
+      y = keypoints[i, :, 1]
+      size = 0
+      for j in range(0, keypoints.shape[1]):
+        if not (keypoints[0, :, 0][j]==0 and keypoints[0, :, 1][j]==0):
+          size = size + 1
+      x_mean = np.sum(x) / size
+      y_mean = np.sum(y) / size
+      print("x: " + str(x_mean))
+      print("y; " + str(y_mean))
 
   print("--------------------")
   #print("shape: " + str(keypoints.shape))
