@@ -51,21 +51,22 @@ openpose = OpenPose(params)
 #   cv2.waitKey(15)
 
 # ----------print keypoints once----------
-# img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img0.png")
-# keypoints, output_image = openpose.forward(img, True)
-# print(keypoints)
-# print(keypoints.shape)
-# print("detect " + str(keypoints.shape[0]) + " persons.")
-# #plt.imshow(output_image)
-# 
-# print(keypoints[0, :, 0])
-# print(keypoints[0, :, 1])
-# plt.scatter(keypoints[0, :, 0], keypoints[0, :, 1])
-# plt.show()
-# cv2.waitKey(0)
-# 
-# cv2.imshow("output", output_image)
-# cv2.waitKey(0)
+#img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img0.png")
+#keypoints, output_image = openpose.forward(img, True)
+#print(keypoints)
+#print(keypoints.shape)
+#print("detect " + str(keypoints.shape[0]) + " persons.")
+##plt.imshow(output_image)
+#
+#plt.imshow(img)
+##print(keypoints[0, :, 0])
+##print(keypoints[0, :, 1])
+#plt.scatter(keypoints[0, :, 0], keypoints[0, :, 1])
+#plt.show()
+#cv2.waitKey(0)
+#
+#cv2.imshow("output", output_image)
+#cv2.waitKey(0)
 
 # ----------print keypoints in for loop----------
 current_num = 0
@@ -74,6 +75,7 @@ for i in range(0, 30):
   img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
   keypoints, output_image = openpose.forward(img, True)
 
+  #plt.imshow(img)
   #plt.scatter(keypoints[0, :, 0], keypoints[0, :, 1])
   #plt.show()
   #cv2.waitKey(0)
@@ -92,9 +94,6 @@ for i in range(0, 30):
       print("x: " + str(np.average(keypoints[i, :, 0])))
       print("y; " + str(np.average(keypoints[i, :, 1])))
 
-  
-
   print("--------------------")
   #print("shape: " + str(keypoints.shape))
   cv2.waitKey(15)
-
