@@ -103,8 +103,8 @@ for i in range(0, count_files()):
   # calculate mean coordinate
   if keypoints.shape[0] != 0: # if no person then donot calculate
     for j in range(0, keypoints.shape[0]):
-      #print("x: " + str(np.average(keypoints[i, :, 0])))
-      #print("y; " + str(np.average(keypoints[i, :, 1])))
+      #print("x: " + str(np.average(keypoints[j, :, 0])))
+      #print("y; " + str(np.average(keypoints[j, :, 1])))
       x = keypoints[j, :, 0]
       y = keypoints[j, :, 1]
       size = 0
