@@ -9,7 +9,7 @@ from sys import platform
 import numpy as np
 from time import sleep
 
-# ----------count the number of files----------
+# ----------count the number of image files----------
 def count_files():
   directory = os.path.expanduser('~') + "/opencv_test/images"
   files = os.listdir(directory)
@@ -19,6 +19,14 @@ def count_files():
     if index:
       count = count + 1
   return count
+
+# ---------get new person's coordinate----------
+def get_coodinate(last_coordinate, coordinate):
+
+
+# ---------get new person's coordinate from 0 to 1----------
+def get_coordinate_0(coordinate):
+  return coordinate[0]
 
 # ----------set paramaters----------
 # Remember to add your installation path here
