@@ -126,6 +126,7 @@ current_num = 0 # num of persons
 last_num = 0 # num of last persons
 #INFINITY = 256 * 256 * 256
 i = 0 # index for loop
+not_found_count = 0 # counter of not found
 
 # loop for infinity
 while True:
@@ -134,22 +135,26 @@ while True:
   if img != None:
     keypoints, output_image = openpose.forward(img, True)
     i = i + 1
+    not_found_count = 0 # reset counter
   else:
     print("serarching images...")
-    sleep(0.1)
+    sleep(0.5)
+    not_found_count = not_found_count + 1
+    if not_found_count > 10: sys.exit(0) # not found images so finish
     continue
-
+  
+  # show image
   cv2.imshow("output", output_image)
   print("Frame" + str(i))
 
-  # does find new person?
+  # find new person
   current_num = keypoints.shape[0]
   if current_num > last_num:
     print("find a new person!")
   last_num = current_num
   print("detect " + str(keypoints.shape[0]) + " persons.")
 
-  # calculate mean coordinate
+  # calculate mean of coordinate
   if keypoints.shape[0] != 0: # if no person then donot calculate
     for j in range(0, keypoints.shape[0]):
       x = keypoints[j, :, 0]
@@ -164,6 +169,5 @@ while True:
       print("y: " + str(y_mean))
 
   print("--------------------")
-  #print("shape: " + str(keypoints.shape))
   cv2.waitKey(15)
 
