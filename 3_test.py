@@ -34,7 +34,7 @@ def search_neighborhood(pt0, pts):
   return distances.argmin()
 
 # ---------get new person's coordinate from 1 to 2----------
-def get_coodinate(last_coordinates, coordinates):
+def get_coodinate_1(last_coordinates, coordinates):
   for last_c in last_coordinates:
     index = search_neighborhood(last_c, coordinates)
   return coordinates[index - 1]
@@ -172,8 +172,17 @@ while True:
   cv2.imshow("output", output_image)
   print("Frame" + str(i))
 
+  # find new person
+  new_person_flag = False
+  current_num = keypoints.shape[0]
+  if current_num > last_num:
+    new_person_flag = True
+    print("find a new person!")
+  last_num = current_num
+  print("detect " + str(keypoints.shape[0]) + " persons.")
+
   # calculate mean of coordinate
-  last_coordinates = coordinate
+  last_coordinates = coordinates
   coordinates = []
   if keypoints.shape[0] != 0: # if no person then donot calculate
     for j in range(0, keypoints.shape[0]):
@@ -190,12 +199,19 @@ while True:
       # treating lists
       coordinates.append([x_mean, y_mean])
 
-  # find new person
-  current_num = keypoints.shape[0]
-  if current_num > last_num:
-    print("find a new person!")
-  last_num = current_num
-  print("detect " + str(keypoints.shape[0]) + " persons.")
+  # proceeding for new person
+  if new_person_flag:
+    if current_num == 1:
+      new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
+      print("new persons's coordinate: ")
+      print(new_person_coordinate)
+    elif current_num == 2:
+      new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
+      print("new persons's coordinate: ")
+      print(new_person_coordinate)
+    else:
+      print("unsupport number of people") 
+
 
   print("--------------------")
   cv2.waitKey(15)
