@@ -9,6 +9,12 @@ from sys import platform
 import numpy as np
 from time import sleep
 
+# ----------CLASS: point----------
+class Point():
+  def __init__(self, x, y):
+    self.x = x
+    self.y = y
+
 # ----------count the number of image files----------
 def count_files():
   directory = os.path.expanduser('~') + "/opencv_test/images"
@@ -20,13 +26,22 @@ def count_files():
       count = count + 1
   return count
 
-# ---------get new person's coordinate----------
-def get_coodinate(last_coordinate, coordinate):
+# ---------search neighborhood point's index----------
+def search_neighborhood(pt0, pts):
+  distances = np.repeat(0, pts.shape[0])
+  for i, pt in enumerate(pts):
+    dinstances[i] = np.linalg.norm(pt - pt0)
+  return distances.argmin()
 
+# ---------get new person's coordinate from 1 to 2----------
+def get_coodinate(last_coordinates, coordinates):
+  for last_c in last_coordinates:
+    index = search_neighborhood(last_c, coordinates)
+  return coordinates[index - 1]
 
 # ---------get new person's coordinate from 0 to 1----------
-def get_coordinate_0(coordinate):
-  return coordinate[0]
+def get_coordinate_0(coordinates):
+  return coordinates[0]
 
 # ----------set paramaters----------
 # Remember to add your installation path here
@@ -132,6 +147,8 @@ openpose = OpenPose(params)
 # ----------print keypoints infinity ----------
 current_num = 0 # num of persons
 last_num = 0 # num of last persons
+coordinates = [] # list of current coordinates
+last_coordinates = [] # list of last coordinates
 #INFINITY = 256 * 256 * 256
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
@@ -155,14 +172,9 @@ while True:
   cv2.imshow("output", output_image)
   print("Frame" + str(i))
 
-  # find new person
-  current_num = keypoints.shape[0]
-  if current_num > last_num:
-    print("find a new person!")
-  last_num = current_num
-  print("detect " + str(keypoints.shape[0]) + " persons.")
-
   # calculate mean of coordinate
+  last_coordinates = coordinate
+  coordinates = []
   if keypoints.shape[0] != 0: # if no person then donot calculate
     for j in range(0, keypoints.shape[0]):
       x = keypoints[j, :, 0]
@@ -175,6 +187,15 @@ while True:
       y_mean = np.sum(y) / size
       print("x: " + str(x_mean))
       print("y: " + str(y_mean))
+      # treating lists
+      coordinates.append([x_mean, y_mean])
+
+  # find new person
+  current_num = keypoints.shape[0]
+  if current_num > last_num:
+    print("find a new person!")
+  last_num = current_num
+  print("detect " + str(keypoints.shape[0]) + " persons.")
 
   print("--------------------")
   cv2.waitKey(15)
