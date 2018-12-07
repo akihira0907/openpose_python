@@ -1,21 +1,23 @@
+#coding:utf-8
 # From Python
 # It requires OpenCV installed for Python
 import sys
 import cv2
 import os
 import re
+import csv
 import matplotlib.pyplot as plt
 from sys import platform
 import numpy as np
 from time import sleep
 
-# ----------CLASS: point----------
+# ----------class points----------
 class Point():
   def __init__(self, x, y):
     self.x = x
     self.y = y
 
-# ----------count the number of image files----------
+# ----------count the number of files----------
 def count_files():
   directory = os.path.expanduser('~') + "/opencv_test/images"
   files = os.listdir(directory)
@@ -30,11 +32,11 @@ def count_files():
 def search_neighborhood(pt0, pts):
   distances = np.repeat(0, pts.shape[0])
   for i, pt in enumerate(pts):
-    dinstances[i] = np.linalg.norm(pt - pt0)
+    distances[i] = np.linalg.norm(pt - pt0)
   return distances.argmin()
 
 # ---------get new person's coordinate from 1 to 2----------
-def get_coodinate_1(last_coordinates, coordinates):
+def get_coordinate_1(last_coordinates, coordinates):
   for last_c in last_coordinates:
     index = search_neighborhood(last_c, coordinates)
   return coordinates[index - 1]
@@ -144,7 +146,7 @@ openpose = OpenPose(params)
 #  cv2.waitKey(15)
 
 
-# ----------print keypoints infinity ----------
+# ----------print keypoints infinity and write csv----------
 current_num = 0 # num of persons
 last_num = 0 # num of last persons
 coordinates = [] # list of current coordinates
@@ -152,12 +154,16 @@ last_coordinates = [] # list of last coordinates
 #INFINITY = 256 * 256 * 256
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
+path = 'output.csv'
+
+cap = cv2.VideoCapture(0)
 
 # loop for infinity
 while True:
   # read an image
-  img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
-  if img != None:
+  #img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
+  ret, img = cap.read()
+  if ret:
     keypoints, output_image = openpose.forward(img, True)
     i = i + 1
     not_found_count = 0 # reset counter
@@ -170,7 +176,7 @@ while True:
   
   # show image
   cv2.imshow("output", output_image)
-  print("Frame" + str(i))
+  # print("Frame" + str(i))
 
   # find new person
   new_person_flag = False
@@ -179,7 +185,7 @@ while True:
   if current_num > last_num:
     new_person_flag = True
     print("find a new person!")
-  print("detect " + str(keypoints.shape[0]) + " persons.")
+    print("detect " + str(keypoints.shape[0]) + " persons.")
 
   # calculate mean of coordinate
   last_coordinates = coordinates
@@ -194,25 +200,24 @@ while True:
           size = size + 1
       x_mean = np.sum(x) / size
       y_mean = np.sum(y) / size
-      print("x: " + str(x_mean))
-      print("y: " + str(y_mean))
-      # treating lists
-      coordinates.append([x_mean, y_mean])
+      if new_person_flag:
+        print("x: " + str(x_mean))
+        print("y: " + str(y_mean))
+      coordinates.append([x_mean, y_mean]) # 新しい座標を現在のリストに追加
 
-  # proceeding for new person
+  # 新しい人物の座標を取得
   if new_person_flag:
-    if current_num == 1:
+    if current_num == 1 and last_num == 0:
       new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
       print("new persons's coordinate: ")
       print(new_person_coordinate)
-    elif current_num == 2:
+    elif current_num == 2 and last_num == 1:
       new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
       print("new persons's coordinate: ")
       print(new_person_coordinate)
     else:
       print("unsupport number of people") 
+    print("--------------------")
 
-
-  print("--------------------")
   cv2.waitKey(15)
 
