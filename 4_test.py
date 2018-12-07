@@ -45,6 +45,27 @@ def get_coordinate_1(last_coordinates, coordinates):
 def get_coordinate_0(coordinates):
   return coordinates[0]
 
+# ---------関数:csv書き込み----------
+def write_csv(lst, path):
+  """
+  csvに書き出す
+
+  Parameters
+  ----------
+  lst: list
+    書き込む座標のリスト
+  path: string
+    書き込むcsvファイル名
+  """
+  if not os.path.isfile(path): # ファイルが存在しない場合wで開く
+    with open(path, 'w') as f:
+      writer = csv.writer(f, lineterminator='\n')
+      writer.writerow(lst)
+  else: # ファイルが存在する場合aで開く
+    with open(path, 'a') as f:
+      writer = csv.writer(f, lineterminator='\n')
+      writer.writerow(lst)
+
 # ----------set paramaters----------
 # Remember to add your installation path here
 # Option a
@@ -151,10 +172,9 @@ current_num = 0 # num of persons
 last_num = 0 # num of last persons
 coordinates = [] # list of current coordinates
 last_coordinates = [] # list of last coordinates
-#INFINITY = 256 * 256 * 256
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
-path = 'output.csv'
+path = 'output.csv' # 出力先csvファイル名
 
 cap = cv2.VideoCapture(0)
 
@@ -201,11 +221,11 @@ while True:
       x_mean = np.sum(x) / size
       y_mean = np.sum(y) / size
       if new_person_flag:
-        print("x: " + str(x_mean))
-        print("y: " + str(y_mean))
+        print("x(" + str(j) + "): " + str(x_mean))
+        print("y(" + str(j) + "): " + str(y_mean))
       coordinates.append([x_mean, y_mean]) # 新しい座標を現在のリストに追加
 
-  # 新しい人物の座標を取得
+  # 新しい人物の座標を取得、csvに書き込み
   if new_person_flag:
     if current_num == 1 and last_num == 0:
       new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
