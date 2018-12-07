@@ -168,17 +168,21 @@ openpose = OpenPose(params)
 
 
 # ----------print keypoints infinity and write csv----------
-current_num = 0 # num of persons
-last_num = 0 # num of last persons
+current_num = 0 # 現在の人数
+last_num = 0 # 1フレーム前の人数
 coordinates = [] # list of current coordinates
 last_coordinates = [] # list of last coordinates
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
 
-cap = cv2.VideoCapture(0)
+# 出力ファイルの削除(初期化)
+if os.path.isfile(path):
+  os.remove(path)
 
-# loop for infinity
+cap = cv2.VideoCapture(0) # カメラを作成
+
+# 無限ループ
 while True:
   # read an image
   #img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
@@ -205,7 +209,7 @@ while True:
   if current_num > last_num:
     new_person_flag = True
     print("find a new person!")
-    print("detect " + str(keypoints.shape[0]) + " persons.")
+    print("detect " + str(last_num) + " -> " + str(current_num) + " persons.")
 
   # calculate mean of coordinate
   last_coordinates = coordinates
@@ -231,10 +235,12 @@ while True:
       new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
       print("new persons's coordinate: ")
       print(new_person_coordinate)
+      write_csv(new_person_coordinate, path) # csvに出力
     elif current_num == 2 and last_num == 1:
       new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
       print("new persons's coordinate: ")
       print(new_person_coordinate)
+      write_csv(new_person_coordinate, path) # csvに出力
     else:
       print("unsupport number of people") 
     print("--------------------")
