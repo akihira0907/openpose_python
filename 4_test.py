@@ -57,14 +57,19 @@ def write_csv(lst, path):
   path: string
     書き込むcsvファイル名
   """
-  if not os.path.isfile(path): # ファイルが存在しない場合wで開く
-    with open(path, 'w') as f:
-      writer = csv.writer(f, lineterminator='\n')
-      writer.writerow(lst)
-  else: # ファイルが存在する場合aで開く
-    with open(path, 'a') as f:
-      writer = csv.writer(f, lineterminator='\n')
-      writer.writerow(lst)
+  # if not os.path.isfile(path): # ファイルが存在しない場合wで開く
+  #   with open(path, 'w') as f:
+  #     writer = csv.writer(f, lineterminator='\n')
+  #     writer.writerow(lst)
+  # else: # ファイルが存在する場合aで開く
+  #   with open(path, 'a') as f:
+  #     writer = csv.writer(f, lineterminator='\n')
+  #     writer.writerow(lst)
+
+  #ファイルの存在の有無に関わらず上書き
+  with open(path, 'w') as f:
+    writer = csv.writer(f, lineterminator='\n')
+    writer.writerow(lst)
 
 # ----------set paramaters----------
 # Remember to add your installation path here
@@ -181,11 +186,11 @@ if os.path.isfile(path):
   os.remove(path)
 
 cap = cv2.VideoCapture(0) # カメラを作成
+width = cap.get(cv2.CAP_PROP_FRAME_WIDTH) # カメラの幅
+height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) # カメラの高さ
 
 # 無限ループ
 while True:
-  # read an image
-  #img = cv2.imread(os.path.expanduser('~') + "/opencv_test/images/img" + str(i) + ".png")
   ret, img = cap.read()
   if ret:
     keypoints, output_image = openpose.forward(img, True)
