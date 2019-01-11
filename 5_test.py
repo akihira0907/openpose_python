@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sys import platform
 import numpy as np
 from time import sleep
+import time
 
 # ----------class points----------
 class Point():
@@ -75,14 +76,16 @@ def write_csv(lst, path):
 def match_coodinates(last_coordinates, raw_coordinates):
   last_coordinates_items = last_coordinates.items()
   new_person_flags = np.ones(len(raw_coordinates), dtype=np.bool)
-  distance_matrix = np.zeros(len(last_coordinates), len(raw_coordinates))
+  distance_matrix = np.zeros([len(last_coordinates), len(raw_coordinates)])
   for i, (_, last_c) in enumerate(last_coordinates_items):
     for j, raw_c in enumerate(raw_coordinates):
-      distance_matrix[i][j] = np.linalg.norm(last_c, raw_c)
+      # distance_matrix[i][j] = np.linalg.norm() # BUG
+      distance_matrix[i][j] = np.sqrt((last_c[0]-raw_c[0])**2 + (last_c[1]-raw_c[1])**2)
   coordinates = dict()
   new_coordinates = dict()
   for count in range(min(distance_matrix.shape)):
-    i, j = np.argmin(distance_matrix)
+    # i, j = np.argmin(distance_matrix) # BUG
+    i, j = np.unravel_index(distance_matrix.argmin(), distance_matrix.shape)
     coordinates[last_coordinates_items[i][0]] = raw_coordinates[j]
     distance_matrix[i, :] = np.Inf
     distance_matrix[:, j] = np.Inf
@@ -129,8 +132,8 @@ openpose = OpenPose(params)
 # ----------print keypoints infinity and write csv----------
 current_num = 0 # 現在の人数
 last_num = 0 # 1フレーム前の人数
-coordinates = [] # list of current coordinates
-last_coordinates = [] # list of last coordinates
+coordinates = dict() # list of current coordinates
+last_coordinates = dict() # list of last coordinates
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
@@ -213,7 +216,7 @@ while True:
     print("new persons's coordinate: ")
     print(new_coordinates.values()[0])
     write_csv(new_coordinates.values()[0], path) # csvに出力
-  print("--------------------")
+    print("--------------------")
 
   cv2.waitKey(15)
 
