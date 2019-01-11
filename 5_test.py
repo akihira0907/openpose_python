@@ -71,6 +71,29 @@ def write_csv(lst, path):
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(lst)
 
+# ---------match coordinates---------
+def match_coodinates(last_coordinates, raw_coordinates):
+  last_coordinates_items = last_coordinates.items()
+  new_person_flags = np.ones(len(raw_coordinates), dtype=np.bool)
+  distance_matrix = np.zeros(len(last_coordinates), len(raw_coordinates))
+  for i, (_, last_c) in enumerate(last_coordinates_items):
+    for j, raw_c in enumerate(raw_coordinates):
+      distance_matrix[i][j] = np.linalg.norm(last_c, raw_c)
+  coordinates = dict()
+  new_coordinates = dict()
+  for count in range(min(distance_matrix.shape)):
+    i, j = np.argmin(distance_matrix)
+    coordinates[last_coordinates_items[i][0]] = raw_coordinates[j]
+    distance_matrix[i, :] = np.Inf
+    distance_matrix[:, j] = np.Inf
+    new_person_flags[j] = False
+  for i, flag in enumerate(new_person_flags):
+    if flag == True:
+      key = '{}_{}'.format(time.time(), i)
+      coordinates[key] = raw_coordinates[i]
+      new_coordinates[key] = raw_coordinates[i]
+  return coordinates, new_coordinates
+
 # ----------パラメータのセット----------
 # Remember to add your installation path here
 # Option a
@@ -149,7 +172,7 @@ while True:
 
   # 座標の平均値を計算
   last_coordinates = coordinates
-  coordinates = []
+  raw_coordinates = []
   if keypoints.shape[0] != 0: # 人数がゼロ人じゃなければ計算
     for j in range(0, keypoints.shape[0]): # 人の数だけループを回す
       x = keypoints[j, :, 0]
@@ -166,23 +189,32 @@ while True:
       if new_person_flag: # 人数が増加していれば座標を表示
         print("x(" + str(j) + "): " + str(x_mean))
         print("y(" + str(j) + "): " + str(y_mean))
-      coordinates.append([x_mean, y_mean]) # 新しい座標を現在のリストに追加
+      raw_coordinates.append([x_mean, y_mean]) # 新しい座標を現在のリストに追加
+  coordinates, new_coordinates = match_coodinates(last_coordinates, raw_coordinates)
 
   # 新しい人物の座標を取得、csvに書き込み
-  if new_person_flag:
-    if current_num == 1 and last_num == 0:
-      new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
-      print("new persons's coordinate: ")
-      print(new_person_coordinate)
-      write_csv(new_person_coordinate, path) # csvに出力
-    elif current_num == 2 and last_num == 1:
-      new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
-      print("new persons's coordinate: ")
-      print(new_person_coordinate)
-      write_csv(new_person_coordinate, path) # csvに出力
-    else:
-      print("unsupport number of people") 
-    print("--------------------")
+  # if new_person_flag:
+  #   if current_num == 1 and last_num == 0:
+  #     new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
+  #     print("new persons's coordinate: ")
+  #     print(new_person_coordinate)
+  #     write_csv(new_person_coordinate, path) # csvに出力
+  #   elif current_num == 2 and last_num == 1:
+  #     new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
+  #     print("new persons's coordinate: ")
+  #     print(new_person_coordinate)
+  #     write_csv(new_person_coordinate, path) # csvに出力
+  #   else:
+  #     print("unsupport number of people") 
+  #   print("--------------------")
+
+  # 増えた人数が1人ならCSVに書き込み
+  if current_num - last_num == 1:
+    print("new persons's coordinate: ")
+    print(new_coordinates.values()[0])
+    write_csv(new_coordinates.values()[0], path) # csvに出力
+  print("--------------------")
 
   cv2.waitKey(15)
+
 
