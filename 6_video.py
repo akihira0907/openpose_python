@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from sys import platform
 import numpy as np
 from time import sleep
-import time
 
 # ----------class points----------
 class Point():
@@ -72,54 +71,6 @@ def write_csv(lst, path):
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(lst)
 
-# ---------match coordinates---------
-def match_coodinates(last_coordinates, raw_coordinates):
-  """
-  タグ付けされてない座標と前フレームの座標から
-  現在フレームのタグ付けされた座標を取得
-
-  Parameters
-  ----------
-  last_coordinates: dict
-    前フレームのタグ付けされた座標
-  raw_coordinates: list (int)
-    タグ付けされてない今フレームの座標
-
-  Returns
-  -------
-  coordinates: dict
-    タグ付けされた今フレームの座標
-  new_coordinates: dict
-    タグ付けされた新しい人物の座標
-  """
-  last_coordinates_items = last_coordinates.items() # 辞書をタプルのリストに変換
-  new_person_flags = np.ones(len(raw_coordinates), dtype=np.bool) # 新しい座標か否かの真偽値の配列(サイズは今フレームの座標の数)
-  distance_matrix = np.zeros([len(last_coordinates), len(raw_coordinates)]) # 距離を格納する二次元配列
-  coordinates = dict() # 返戻値
-  new_coordinates = dict() # 返戻値
-
-  # 距離の二次元配列を埋めていく
-  for i, (_, last_c) in enumerate(last_coordinates_items): # 前フレームの座標の数だけループ
-    for j, raw_c in enumerate(raw_coordinates): # 今フレームの座標の数だけループ
-      distance_matrix[i][j] = np.sqrt((last_c[0]-raw_c[0])**2 + (last_c[1]-raw_c[1])**2) #2点間の距離を計算
-  
-  # 距離が最小のものから処理を行っていく
-  for count in range(min(distance_matrix.shape)): # 前と今フレームの少ない方の座標の数だけループ
-    i, j = np.unravel_index(distance_matrix.argmin(), distance_matrix.shape) # 距離が最小の組み合わせを取得
-    coordinates[last_coordinates_items[i][0]] = raw_coordinates[j] # 対応するIDをキーとして座標を格納
-    distance_matrix[i, :] = np.Inf # 対応してる距離を無限に
-    distance_matrix[:, j] = np.Inf # 対応してる距離を無限に
-    new_person_flags[j] = False # 対応してる真偽値を偽に
-
-  # 新しい人物の座標について処理
-  for i, flag in enumerate(new_person_flags): # 真偽値についてループ
-    if flag == True:
-      key = '{}_{}'.format(time.time(), i) # 新しいIDを生成
-      coordinates[key] = raw_coordinates[i] # 新しい座標を新しいキーで登録
-      new_coordinates[key] = raw_coordinates[i] # 新しい座標だけのリストにも登録
-
-  return coordinates, new_coordinates
-
 # ----------パラメータのセット----------
 # Remember to add your installation path here
 # Option a
@@ -155,8 +106,8 @@ openpose = OpenPose(params)
 # ----------print keypoints infinity and write csv----------
 current_num = 0 # 現在の人数
 last_num = 0 # 1フレーム前の人数
-coordinates = dict() # 現在のフレームのタグ付けされた座標の辞書
-last_coordinates = dict() # 前フレームのタグ付けされた座標の辞書
+coordinates = [] # list of current coordinates
+last_coordinates = [] # list of last coordinates
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
@@ -196,9 +147,9 @@ while True:
     print("find a new person!")
     print("detect " + str(last_num) + " -> " + str(current_num) + " persons.")
 
-  # 座標を計算、格納
-  last_coordinates = coordinates # 前フレームの座標を格納
-  raw_coordinates = [] # タグ付けされてない座標を格納するリスト
+  # 座標の平均値を計算
+  last_coordinates = coordinates
+  coordinates = []
   if keypoints.shape[0] != 0: # 人数がゼロ人じゃなければ計算
     for j in range(0, keypoints.shape[0]): # 人の数だけループを回す
       x = keypoints[j, :, 0]
@@ -215,35 +166,23 @@ while True:
       if new_person_flag: # 人数が増加していれば座標を表示
         print("x(" + str(j) + "): " + str(x_mean))
         print("y(" + str(j) + "): " + str(y_mean))
-      raw_coordinates.append([x_mean, y_mean]) # 新しい座標をリストに追加
-  # タグ付けされた座標の辞書と新しい座標の辞書を取得
-  coordinates, new_coordinates = match_coodinates(last_coordinates, raw_coordinates)
+      coordinates.append([x_mean, y_mean]) # 新しい座標を現在のリストに追加
 
   # 新しい人物の座標を取得、csvに書き込み
-  # if new_person_flag:
-  #   if current_num == 1 and last_num == 0:
-  #     new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
-  #     print("new persons's coordinate: ")
-  #     print(new_person_coordinate)
-  #     write_csv(new_person_coordinate, path) # csvに出力
-  #   elif current_num == 2 and last_num == 1:
-  #     new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
-  #     print("new persons's coordinate: ")
-  #     print(new_person_coordinate)
-  #     write_csv(new_person_coordinate, path) # csvに出力
-  #   else:
-  #     print("unsupport number of people") 
-  #   print("--------------------")
-
-  # 増えた人数が1人ならCSVに書き込み
-  if current_num - last_num == 1:
-    print("new persons's coordinate: ")
-    print(new_coordinates.values()[0])
-    print("person's ID: ")
-    print(coordinates.keys())
-    write_csv(new_coordinates.values()[0], path) # csvに出力
+  if new_person_flag:
+    if current_num == 1 and last_num == 0:
+      new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
+      print("new persons's coordinate: ")
+      print(new_person_coordinate)
+      write_csv(new_person_coordinate, path) # csvに出力
+    elif current_num == 2 and last_num == 1:
+      new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
+      print("new persons's coordinate: ")
+      print(new_person_coordinate)
+      write_csv(new_person_coordinate, path) # csvに出力
+    else:
+      print("unsupport number of people") 
     print("--------------------")
 
   cv2.waitKey(15)
-
 
