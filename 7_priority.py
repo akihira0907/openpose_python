@@ -262,15 +262,23 @@ while True:
   # 優先度の辞書にタグの登録
   regist_priority(priorities, appear_times)
 
-  # 増えた人数が1人ならCSVに書き込み
-  if current_num - last_num == 1:
-    print("new persons's coordinate: ")
-    print(new_coordinates.values()[0])
-    print("ID ")
-    print(coordinates.keys())
-    print("Priorities")
-    print(priorities.values())
-    write_csv(new_coordinates.values()[0], path) # csvに出力
+  # # 増えた人数が1人ならCSVに書き込み
+  # if current_num - last_num == 1:
+  #   print("new persons's coordinate: ")
+  #   print(new_coordinates.values()[0])
+  #   print("ID ")
+  #   print(coordinates.keys())
+  #   print("Priorities")
+  #   print(priorities.values())
+  #   write_csv(new_coordinates.values()[0], path) # csvに出力
+  #   print("--------------------")
+
+  # 優先度の最も高い座標をCSVに書き込み
+  if priorities:
+    index = max(priorities.items(), key=lambda x:x[1])[0]
+    print("writing...")
+    print(coordinates[index])
+    write_csv(coordinates[index], path)
     print("--------------------")
 
   cv2.waitKey(15)
