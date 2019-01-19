@@ -12,13 +12,13 @@ import numpy as np
 from time import sleep
 import time
 
-# ----------class points----------
+# ----------クラス:座標----------
 class Point():
   def __init__(self, x, y):
     self.x = x
     self.y = y
 
-# ----------count the number of files----------
+# ----------ファイルの数を数える----------
 def count_files():
   directory = os.path.expanduser('~') + "/opencv_test/images"
   files = os.listdir(directory)
@@ -29,7 +29,7 @@ def count_files():
       count = count + 1
   return count
 
-# ---------search neighborhood point's index----------
+# ---------最近傍の点を探す----------
 def search_neighborhood(pt0, pts):
   distances = np.repeat(0, pts.shape[0])
   for i, pt in enumerate(pts):
@@ -120,6 +120,38 @@ def match_coodinates(last_coordinates, raw_coordinates):
 
   return coordinates, new_coordinates
 
+# ----------出現時間の登録とインクリメントと削除----------
+def regist_time(coordinates, appear_times):
+  is_appear = dict.fromkeys(appear_times, False) # 削除のための真偽値
+  for tag in coordinates.keys():
+    if not tag in appear_times.keys():
+      appear_times[tag] = 0
+    else:
+      appear_times[tag] += 1
+    is_appear[tag] = True
+  for tag in is_appear.keys():
+    if is_appear[tag] == False:
+      del appear_times[tag]
+
+# ----------優先度の登録と削除----------
+def regist_priority(priorities, appear_times):
+  is_appear = dict.fromkeys(priorities, False)
+  for tag in appear_times.keys():
+    priorities[tag] = calc_priority(appear_times[tag])
+    is_appear[tag] = True
+  for tag in is_appear.keys():
+    if is_appear[tag] == False:
+      del priorities[tag]
+
+# ----------優先度を算出する式----------
+def calc_priority(tx):
+  alpha = 1.1
+  beta = 1
+  gamma = 1
+  delta = 1 
+  epsilon = 10
+  return 10000 / (alpha * tx + beta) - 10000 / (gamma * tx + delta) + epsilon
+
 # ----------パラメータのセット----------
 # Remember to add your installation path here
 # Option a
@@ -155,8 +187,12 @@ openpose = OpenPose(params)
 # ----------print keypoints infinity and write csv----------
 current_num = 0 # 現在の人数
 last_num = 0 # 1フレーム前の人数
+
 coordinates = dict() # 現在のフレームのタグ付けされた座標の辞書
 last_coordinates = dict() # 前フレームのタグ付けされた座標の辞書
+priorities = dict() # 優先度を格納する辞書
+appear_times = dict() # 出現時間を格納する辞書
+
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
@@ -180,7 +216,7 @@ while True:
     print("serarching images...")
     sleep(0.5)
     not_found_count = not_found_count + 1
-    if not_found_count > 10: sys.exit(0) # not found images so finish
+    if not_found_count > 10: sys.exit(0) # not found images then finish
     continue # back to loop
   
   # show image
@@ -196,7 +232,7 @@ while True:
     print("find a new person!")
     print("detect " + str(last_num) + " -> " + str(current_num) + " persons.")
 
-  # 座標を計算、格納
+  # 座標を計算、格納(タグ付けはしない)
   last_coordinates = coordinates # 前フレームの座標を格納
   raw_coordinates = [] # タグ付けされてない座標を格納するリスト
   if keypoints.shape[0] != 0: # 人数がゼロ人じゃなければ計算
@@ -216,31 +252,24 @@ while True:
         print("x(" + str(j) + "): " + str(x_mean))
         print("y(" + str(j) + "): " + str(y_mean))
       raw_coordinates.append([x_mean, y_mean]) # 新しい座標をリストに追加
+
   # タグ付けされた座標の辞書と新しい座標の辞書を取得
   coordinates, new_coordinates = match_coodinates(last_coordinates, raw_coordinates)
+  
+  # 出現時間の辞書にタグの登録とインクリメント
+  regist_time(coordinates, appear_times)
 
-  # 新しい人物の座標を取得、csvに書き込み
-  # if new_person_flag:
-  #   if current_num == 1 and last_num == 0:
-  #     new_person_coordinate = get_coordinate_0(np.array(coordinates)).tolist()
-  #     print("new persons's coordinate: ")
-  #     print(new_person_coordinate)
-  #     write_csv(new_person_coordinate, path) # csvに出力
-  #   elif current_num == 2 and last_num == 1:
-  #     new_person_coordinate = get_coordinate_1(np.array(last_coordinates), np.array(coordinates)).tolist()
-  #     print("new persons's coordinate: ")
-  #     print(new_person_coordinate)
-  #     write_csv(new_person_coordinate, path) # csvに出力
-  #   else:
-  #     print("unsupport number of people") 
-  #   print("--------------------")
+  # 優先度の辞書にタグの登録
+  regist_priority(priorities, appear_times)
 
   # 増えた人数が1人ならCSVに書き込み
   if current_num - last_num == 1:
     print("new persons's coordinate: ")
     print(new_coordinates.values()[0])
-    print("person's ID: ")
+    print("ID ")
     print(coordinates.keys())
+    print("Priorities")
+    print(priorities.values())
     write_csv(new_coordinates.values()[0], path) # csvに出力
     print("--------------------")
 
