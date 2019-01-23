@@ -152,6 +152,16 @@ def calc_priority(tx):
   M = 10000
   return M / (alpha * tx + beta) - (M-10) / (gamma * tx + delta)
 
+# ----------優先度を算出する式----------
+def nearest_to_center(coordinates):
+  """
+  タグ付けされた座標の中から(320,240)に最も近いもののタグを返す
+  """
+  distances = dict() 
+  for tag, c in coordinates.items():
+    distances[tag] = np.sqrt((c[0]-320)**2 + (c[1]-240)**2)
+  return max(distances.items(), key=lambda x:x[1])[0]
+
 # ----------パラメータのセット----------
 # Remember to add your installation path here
 # Option a
@@ -196,6 +206,8 @@ appear_times = dict() # 出現時間を格納する辞書
 i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
+
+center = 20 # 中央の人物に加算する優先度
 
 # 出力ファイルの削除(初期化)
 if os.path.isfile(path):
@@ -262,16 +274,13 @@ while True:
   # 優先度の辞書にタグの登録
   regist_priority(priorities, appear_times)
 
-  # # 増えた人数が1人ならCSVに書き込み
-  # if current_num - last_num == 1:
-  #   print("new persons's coordinate: ")
-  #   print(new_coordinates.values()[0])
-  #   print("ID ")
-  #   print(coordinates.keys())
-  #   print("Priorities")
-  #   print(priorities.values())
-  #   write_csv(new_coordinates.values()[0], path) # csvに出力
-  #   print("--------------------")
+  # 最も中央に近い人物に優先度を加算
+  if coordinates:
+    main_person = nearest_to_center(coordinates)
+  else:
+    main_person = None
+  if main_person and priorities:
+    priorities[main_person] += center
 
   # 優先度の最も高い座標をCSVに書き込み
   if priorities:
