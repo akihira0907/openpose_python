@@ -148,9 +148,9 @@ def calc_priority(tx):
   alpha = 1.1
   beta = 1
   gamma = 1
-  delta = 1 
-  epsilon = 10
-  return 10000 / (alpha * tx + beta) - 10000 / (gamma * tx + delta) + epsilon
+  delta = 1
+  M = 10000
+  return M / (alpha * tx + beta) - (M-10) / (gamma * tx + delta)
 
 # ----------パラメータのセット----------
 # Remember to add your installation path here
