@@ -11,6 +11,7 @@ from sys import platform
 import numpy as np
 from time import sleep
 import time
+import math
 
 # ----------クラス:座標----------
 class Point():
@@ -137,7 +138,8 @@ def regist_time(coordinates, appear_times):
 def regist_priority(priorities, appear_times):
   is_appear = dict.fromkeys(priorities, False)
   for tag in appear_times.keys():
-    priorities[tag] = calc_priority(appear_times[tag])
+    # priorities[tag] = calc_priority(appear_times[tag])
+    priorities[tag] = calc_priority2(appear_times[tag])
     is_appear[tag] = True
   for tag in is_appear.keys():
     if is_appear[tag] == False:
@@ -152,7 +154,15 @@ def calc_priority(tx):
   M = 10000
   return M / (alpha * tx + beta) - (M-10) / (gamma * tx + delta)
 
-# ----------優先度を算出する式----------
+# ----------優先度を算出する式 ver.2----------
+def calc_priority2(tx):
+  alpha = 0.09
+  beta = 10
+  gamma = 0.05
+  delta = 2
+  return 1/(1+math.e**(alpha*tx-beta)) - delta/(gamma*tx+1)
+
+# ----------中央に近い座標のタグ----------
 def nearest_to_center(coordinates):
   """
   タグ付けされた座標の中から(320,240)に最も近いもののタグを返す
@@ -160,7 +170,7 @@ def nearest_to_center(coordinates):
   distances = dict() 
   for tag, c in coordinates.items():
     distances[tag] = np.sqrt((c[0]-320)**2 + (c[1]-240)**2)
-  return max(distances.items(), key=lambda x:x[1])[0]
+  return min(distances.items(), key=lambda x:x[1])[0]
 
 # ----------パラメータのセット----------
 # Remember to add your installation path here
@@ -207,7 +217,7 @@ i = 0 # index for loop
 not_found_count = 0 # counter of not found
 path = 'output.csv' # 出力先csvファイル名
 
-center = 20 # 中央の人物に加算する優先度
+center = 0.2 # 中央の人物に加算する優先度
 
 # 出力ファイルの削除(初期化)
 if os.path.isfile(path):
@@ -280,6 +290,8 @@ while True:
   else:
     main_person = None
   if main_person and priorities:
+    print("Nearest center")
+    print(coordinates[main_person])
     priorities[main_person] += center
 
   # 優先度の最も高い座標をCSVに書き込み
@@ -291,5 +303,6 @@ while True:
     print("--------------------")
 
   cv2.waitKey(15)
+  # time.sleep(0.5)
 
 
